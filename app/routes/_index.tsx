@@ -35,32 +35,43 @@ export async function action({
   const message = body.get("message") as string;
   const chatHistory = JSON.parse(body.get("chat-history") as string) || [];
 
-  // store your key in .env
-
   try {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const chat = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        ...context,
-        ...chatHistory,
-        {
-          role: "user",
-          content: message,
-        },
-      ],
+    const assistant = await openai.beta.assistants.create({
+      name: "RH bot",
+      // instructions:
+      //   "You are an HR bot, and you have find out importante information about the applicant.",
+      model: "gpt-4o",
     });
 
-    const answer = chat.choices[0].message?.content;
+    const thread = await openai.beta.threads.create();
 
-    return {
-      message: body.get("message") as string,
-      answer: answer as string,
-      chatHistory,
-    };
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: message,
+    });
+
+    // eslint-disable-next-line prefer-const
+    let run = await openai.beta.threads.runs.createAndPoll(thread.id, {
+      assistant_id: assistant.id,
+      instructions: context.getInfo,
+    });
+
+    if (run.status === "completed") {
+      const messages = await openai.beta.threads.messages.list(run.thread_id);
+      const answer = messages.data[0].content[0].text.value;
+
+      return {
+        message: body.get("message") as string,
+        answer: answer as string,
+        chatHistory,
+      };
+    } else {
+      console.log(run.status);
+    }
   } catch (error: any) {
     return {
       message: body.get("message") as string,
@@ -166,7 +177,7 @@ export default function Index() {
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
       const value = (event.target as HTMLTextAreaElement).value;
 
-      if (event.key === "Enter" && !event.shiftKey && value.trim().length > 2) {
+      if (event.key === "Enter" && !event.shiftKey && value.trim().length > 0) {
         saveUserMessage(value);
         submit(formRef.current, { replace: true });
       }
@@ -349,7 +360,7 @@ export default function Index() {
                 required
                 rows={1}
                 onKeyDown={submitFormOnEnter}
-                minLength={2}
+                minLength={1}
                 disabled={isSubmitting}
               />
               <input
