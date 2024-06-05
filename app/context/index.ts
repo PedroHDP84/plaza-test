@@ -13,7 +13,7 @@ const context = {
   - Do not write messages with more than 30 words.
   - Do not talk about anything other than the questions.
   - Do not return an object until all questions have been asked.
-  - Save all answers. Only once the user has answered all the questions say goodbye, close and clear the thread, and return an object in JSON format as follows:
+  - Save all answers. Only once the user has answered all the questions return an object in JSON format as follows:
   
   {
     "years_of_experience": int,

@@ -25,9 +25,13 @@ export interface ChatHistoryProps
   error?: boolean;
 }
 
+let assistantId: string | null = null;
+let threadId: string | null = null;
+
 /**
  * API call executed server side
  */
+
 export async function action({
   request,
 }: LoaderFunctionArgs): Promise<ReturnedDataProps> {
@@ -40,29 +44,71 @@ export async function action({
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const assistant = await openai.beta.assistants.create({
-      name: "RH bot",
-      // instructions:
-      //   "You are an HR bot, and you have find out importante information about the applicant.",
-      model: "gpt-4o",
-    });
+    // Check if assistant.id already exists
+    let assistant;
+    if (!assistantId) {
+      assistant = await openai.beta.assistants.create({
+        name: "RH bot",
+        model: "gpt-4o",
+      });
+      assistantId = assistant.id;
+    }
 
-    const thread = await openai.beta.threads.create();
+    let thread;
+    if (!threadId) {
+      thread = await openai.beta.threads.create();
+      threadId = thread.id;
+    }
 
-    await openai.beta.threads.messages.create(thread.id, {
+    await openai.beta.threads.messages.create(threadId, {
       role: "user",
       content: message,
     });
 
     // eslint-disable-next-line prefer-const
-    let run = await openai.beta.threads.runs.createAndPoll(thread.id, {
-      assistant_id: assistant.id,
+    let run = await openai.beta.threads.runs.createAndPoll(threadId, {
+      assistant_id: assistantId,
       instructions: context.getInfo,
     });
 
     if (run.status === "completed") {
       const messages = await openai.beta.threads.messages.list(run.thread_id);
+      for (const message of messages.data) {
+        console.log(message.content);
+      }
       const answer = messages.data[0].content[0].text.value;
+
+      try {
+        const jsonStringMatch = answer.match(/```json\n([\s\S]+?)\n```/);
+        let jsonString;
+
+        if (jsonStringMatch) {
+          // Extract JSON string from within ```json block
+          jsonString = jsonStringMatch[1];
+        } else {
+          // Extract JSON string directly from the text
+          const jsonStartIndex = answer.indexOf("{");
+          const jsonEndIndex = answer.lastIndexOf("}") + 1;
+          if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            jsonString = answer.substring(jsonStartIndex, jsonEndIndex);
+          }
+        }
+
+        if (jsonString) {
+          console.log(jsonString);
+          const jsonObject = JSON.parse(jsonString);
+          console.log("Extracted JSON object:", jsonObject);
+          return {
+            message: body.get("message") as string,
+            answer: "Thank you. Good bye!",
+            chatHistory,
+          };
+        } else {
+          console.error("No JSON string found in the text value.");
+        }
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+      }
 
       return {
         message: body.get("message") as string,
@@ -312,8 +358,8 @@ export default function Index() {
           {chatHistory.length === 0 && (
             <div className="intro grid place-items-center h-full text-center">
               <div className="intro-content">
-                <h1 className="text-4xl font-semibold">OpenAI base</h1>
-                <p className="mt-4">Ask anything 😊</p>
+                <h1 className="text-4xl font-semibold">Plaza Aptitude Test</h1>
+                <p className="mt-4">Ask me something about the position 😊</p>
               </div>
             </div>
           )}
