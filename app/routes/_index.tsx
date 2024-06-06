@@ -439,7 +439,11 @@ export default function Index() {
           </Form>
           <p className="made-with text-xs text-center mt-4">
             Made with ❤️ by{" "}
-            <a target="_blank" rel="noreferrer" href="http://phdp.eng">
+            <a
+              target="_blank"
+              rel="noreferrer"
+              href="https://www.linkedin.com/in/pedrohenriquedepaula/"
+            >
               Pedro H D P
             </a>
           </p>

@@ -11,10 +11,11 @@ import { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Open AI base application" },
-    { name: "description", content: "Welcome to Remix!" },
+    { title: "An example RH Chatbot." },
+    { name: "description", content: "This is an aptitude test for Plaza." },
     { charset: "utf-8" },
     { viewport: "width=device-width,initial-scale=1" },
+    { property: "og:image", content: "/plaza.jpeg" },
   ];
 };
 
