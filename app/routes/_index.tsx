@@ -12,6 +12,9 @@ import Message from "~/components/Message";
 import { SendIcon } from "~/components/Icons";
 import OpenAI from "openai";
 import context from "~/context";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export interface ReturnedDataProps {
   message?: string;
@@ -98,6 +101,14 @@ export async function action({
           console.log(jsonString);
           const jsonObject = JSON.parse(jsonString);
           console.log("Extracted JSON object:", jsonObject);
+
+          // Save jsonObject to the database as a string
+          await prisma.jsonObject.create({
+            data: {
+              data: JSON.stringify(jsonObject),
+            },
+          });
+
           return {
             message: body.get("message") as string,
             answer: "Thank you. Good bye!",
@@ -107,7 +118,7 @@ export async function action({
           console.error("No JSON string found in the text value.");
         }
       } catch (error) {
-        console.error("Failed to parse JSON:", error);
+        console.error("Error", error);
       }
 
       return {
@@ -393,14 +404,15 @@ export default function Index() {
                 htmlFor="message"
                 className="absolute left[-9999px] w-px h-px overflow-hidden"
               >
-                Ask a question
+                Ask a question. Let me now when you are finished so that I may
+                ask my questions.
               </label>
               <textarea
                 id="message"
                 aria-disabled={isSubmitting}
                 ref={inputRef}
-                className="auto-growing-input m-0 appearance-none text-black placeholder:text-black resize-none text-sm md:text-base py-3 pl-5 pr-14 border border-slate-400 outline-none rounded-4xl w-full block leading-6 bg-white"
-                placeholder="Ask a question"
+                className="auto-growing-input m-0 appearance-none text-black placeholder:text-black resize-none text-sm md:text-base py-3 pl-5 pr-14 border border-slate-400 outline-none rounded-4xl w-full block leading-6 bg-white min-h-20"
+                placeholder="Ask a question. Let me now when you are finished so that I may ask my questions."
                 name="message"
                 onChange={handleTextareaChange}
                 required
