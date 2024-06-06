@@ -25,7 +25,8 @@ const context = {
   
   ${jsonString}
 
-  - Make sure to send the json object only once. 
+  - Make sure to send the json object only once. This is very important. 
+  - Dont ask questions that have already been answered. 
   
   You can and should also answer any questions the potential tenant might have about the job post.
   For answering questions follow the rules below:

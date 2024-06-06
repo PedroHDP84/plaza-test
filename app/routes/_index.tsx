@@ -27,6 +27,8 @@ export interface ChatHistoryProps
   error?: boolean;
 }
 
+const prisma = new PrismaClient();
+
 /**
  * API call executed server side
  */
@@ -37,8 +39,6 @@ export async function action({
   const body = await request.formData();
   const message = body.get("message") as string;
   const chatHistory = JSON.parse(body.get("chat-history") as string) || [];
-
-  const prisma = new PrismaClient();
 
   try {
     const openai = new OpenAI({
