@@ -1,9 +1,18 @@
-This is an update to https://github.com/joshsanger/gpt-base by https://github.com/joshsanger
+# Live Demo
 
-- Remix was updated to the lastest version.
-- OpenAi was updated.
-- This repo will become a PR to gpt-base and provided as a Remix Template asap.
-  https://github.com/PedroHDP84
+https://plaza-aptitude-test-fe952e106cd4.herokuapp.com/
+
+# Database
+
+view saved data at https://plaza-aptitude-test-fe952e106cd4.herokuapp.com/data
+
+# Running locally
+
+Add .env file to root with
+
+OPENAI_API_KEY=your_api_key
+
+DATABASE_URL="your_postgresql_database_url"
 
 # Welcome to Remix + Vite!
 
