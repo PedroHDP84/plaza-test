@@ -118,7 +118,7 @@ export async function action({
           console.error("No JSON string found in the text value.");
         }
       } catch (error) {
-        console.error("Failed to parse JSON:", error);
+        console.error("Error", error);
       }
 
       return {
