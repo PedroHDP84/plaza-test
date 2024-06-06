@@ -404,14 +404,15 @@ export default function Index() {
                 htmlFor="message"
                 className="absolute left[-9999px] w-px h-px overflow-hidden"
               >
-                Ask a question
+                Ask a question. Let me now when you are finished so that I may
+                ask my questions.
               </label>
               <textarea
                 id="message"
                 aria-disabled={isSubmitting}
                 ref={inputRef}
-                className="auto-growing-input m-0 appearance-none text-black placeholder:text-black resize-none text-sm md:text-base py-3 pl-5 pr-14 border border-slate-400 outline-none rounded-4xl w-full block leading-6 bg-white"
-                placeholder="Ask a question"
+                className="auto-growing-input m-0 appearance-none text-black placeholder:text-black resize-none text-sm md:text-base py-3 pl-5 pr-14 border border-slate-400 outline-none rounded-4xl w-full block leading-6 bg-white min-h-20"
+                placeholder="Ask a question. Let me now when you are finished so that I may ask my questions."
                 name="message"
                 onChange={handleTextareaChange}
                 required
