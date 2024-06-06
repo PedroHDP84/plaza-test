@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run copy-db && remix vite:build",
-    "copy-db": "cp ./prisma/dev.db ./tmp/prod.db",
+    "copy-db": "mkdir -p ./tmp && cp ./prisma/dev.db ./tmp/prod.db",
     "dev": "remix vite:dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
