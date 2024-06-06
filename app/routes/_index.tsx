@@ -12,6 +12,9 @@ import Message from "~/components/Message";
 import { SendIcon } from "~/components/Icons";
 import OpenAI from "openai";
 import context from "~/context";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export interface ReturnedDataProps {
   message?: string;
@@ -98,6 +101,14 @@ export async function action({
           console.log(jsonString);
           const jsonObject = JSON.parse(jsonString);
           console.log("Extracted JSON object:", jsonObject);
+
+          // Save jsonObject to the database as a string
+          await prisma.jsonObject.create({
+            data: {
+              data: JSON.stringify(jsonObject),
+            },
+          });
+
           return {
             message: body.get("message") as string,
             answer: "Thank you. Good bye!",
