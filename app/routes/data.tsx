@@ -30,7 +30,6 @@ export default function DataTable() {
           <tbody>
             {data.map((item: any) => {
               const parsedData = JSON.parse(item.data);
-              console.log(parsedData);
               return (
                 <tr key={item.id}>
                   <td className="text-center">

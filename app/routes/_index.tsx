@@ -13,9 +13,8 @@ import { SendIcon } from "~/components/Icons";
 import OpenAI from "openai";
 import context from "~/context";
 import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
+import { getSession, commitSession, destroySession } from "app/session";
+import { json } from "@remix-run/node";
 export interface ReturnedDataProps {
   message?: string;
   answer: string;
@@ -28,9 +27,6 @@ export interface ChatHistoryProps
   error?: boolean;
 }
 
-let assistantId: string | null = null;
-let threadId: string | null = null;
-
 /**
  * API call executed server side
  */
@@ -42,10 +38,18 @@ export async function action({
   const message = body.get("message") as string;
   const chatHistory = JSON.parse(body.get("chat-history") as string) || [];
 
+  const prisma = new PrismaClient();
+
   try {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
+
+    const session = await getSession(request.headers.get("Cookie"));
+
+    // Retrieve assistantId and threadId from session
+    let assistantId = session.get("assistantId");
+    let threadId = session.get("threadId");
 
     // Check if assistant.id already exists
     let assistant;
@@ -55,12 +59,14 @@ export async function action({
         model: "gpt-4o",
       });
       assistantId = assistant.id;
+      session.set("assistantId", assistantId);
     }
 
     let thread;
     if (!threadId) {
       thread = await openai.beta.threads.create();
       threadId = thread.id;
+      session.set("threadId", threadId);
     }
 
     await openai.beta.threads.messages.create(threadId, {
@@ -76,9 +82,7 @@ export async function action({
 
     if (run.status === "completed") {
       const messages = await openai.beta.threads.messages.list(run.thread_id);
-      for (const message of messages.data) {
-        console.log(message.content);
-      }
+
       const answer = messages.data[0].content[0].text.value;
 
       try {
@@ -98,9 +102,7 @@ export async function action({
         }
 
         if (jsonString) {
-          console.log(jsonString);
           const jsonObject = JSON.parse(jsonString);
-          console.log("Extracted JSON object:", jsonObject);
 
           // Save jsonObject to the database as a string
           await prisma.jsonObject.create({
@@ -109,11 +111,18 @@ export async function action({
             },
           });
 
-          return {
-            message: body.get("message") as string,
-            answer: "Thank you. Good bye!",
-            chatHistory,
-          };
+          return json(
+            {
+              message: body.get("message") as string,
+              answer: "Thank you. Good bye!",
+              chatHistory,
+            },
+            {
+              headers: {
+                "Set-Cookie": await commitSession(session),
+              },
+            }
+          );
         } else {
           console.error("No JSON string found in the text value.");
         }
@@ -121,11 +130,18 @@ export async function action({
         console.error("Error", error);
       }
 
-      return {
-        message: body.get("message") as string,
-        answer: answer as string,
-        chatHistory,
-      };
+      return json(
+        {
+          message: body.get("message") as string,
+          answer: answer as string,
+          chatHistory,
+        },
+        {
+          headers: {
+            "Set-Cookie": await commitSession(session),
+          },
+        }
+      );
     } else {
       console.log(run.status);
     }
